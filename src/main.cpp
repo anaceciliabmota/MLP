@@ -110,7 +110,7 @@ void inserirNaSolucao (Solucao *s, int c, int r, vector<InsertionInfo>& custoIns
 
 }
 
-Solucao Construcao(Data& data){
+Solucao Construcao(Data& data, double a){
     Solucao s = {{1,1}, 0.0};
     size_t n = data.getDimension();
     vector<int> CL = nosRestantes(n);
@@ -119,8 +119,7 @@ Solucao Construcao(Data& data){
     while (CL.size() != 0){
         vector <InsertionInfo> custoInsercao = CalcularCusto(r, CL, data);
         sort(custoInsercao.begin(), custoInsercao.end(), myfunction);
-        double alpha = (double) rand() / RAND_MAX;
-        int c = rand() % ((int) ceil((alpha + 0.000001) * custoInsercao.size()));
+        int c = rand() % ((int) ceil((a + 0.000001) * custoInsercao.size()));
         inserirNaSolucao(&s, c, r, custoInsercao);
         r = custoInsercao[c].noInserido;
         for (int i = 0; i < CL.size(); i++){
@@ -129,35 +128,30 @@ Solucao Construcao(Data& data){
                 break;
             }
         }
+        
     }
     return s;
 }
-bool bestImprovenmentSwap(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, Data& data){
+bool bestImprovementSwap(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, Data& data){
     double bestCost = s->valorObj;
-    double cost;
+    
     int best_i,best_j;
     for(int i = 1; i < s->sequence.size() - 1; i++){
    
         for(int j = i+1; j < s->sequence.size() - 1;j++){
-            
+            double cost;
             if((i + 1)!= j){
-                Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[j-1][j-1], data);
-                
+                Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[j][j], data);
                 Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[i+1][j-1], data);
-                
                 Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[i][i], data);
-                
-                //s->sequence.size() -1 ou -2???????
-                Subsequence sigma_4 = Subsequence :: Concatenate(sigma_3, subseq_matrix[j+1][s->sequence[s->sequence.size()-1]], data);
+                Subsequence sigma_4 = Subsequence :: Concatenate(sigma_3, subseq_matrix[j+1][s->sequence.size()-1], data);
                 
                 cost = sigma_4.C;
                 
             } else {
                 
-                Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][vi_prev-1],subseq_matrix[vj-1][vi-1], data);
-                
-                //s->sequence.size() -1 ou -2???????
-                Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[vj_next-1][s->sequence.size()-1], data);
+                Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1],subseq_matrix[j][i], data);
+                Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[j+1][s->sequence.size()-1], data);
                 
                 cost = sigma_2.C;
             }
@@ -185,12 +179,10 @@ bool bestImprovement2Opt(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, 
     for(int i = 1; i < s->sequence.size() - 1;i++){
        //i = primeiro elemento da aresta a ser invertida
         for(int j = i + 3; j < s->sequence.size() - 1; j++){
-            cout << "i: " << i << " j: " << j<< endl;
             // j = ultimo elemento da aresta a ser invertida
             Subsequence sigma_1;
             sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[j][i], data);
             Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[j+1][s->sequence.size()-1], data);
-            cout << sigma_2.C<< endl;
             if(sigma_2.C < bestCost){
                 bestCost = sigma_2.C;
                 best_i = i;
@@ -201,6 +193,7 @@ bool bestImprovement2Opt(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, 
     }
     if(bestCost < s->valorObj){
         int cont = 0;
+        //cout << "best i: " << best_i << "best j" << best_j;
         while((best_i + cont) < (best_j - cont)){
             swap(s->sequence[best_i + cont], s->sequence[best_j - cont]);
             cont++;
@@ -211,24 +204,27 @@ bool bestImprovement2Opt(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, 
     }
     return false;
 }
-bool bestImprovementOrOpt(Solucao *s, vector<vector<Subsequence>>& subseq_matrix, int tam_bloco){
-    double bestDelta = 0;
+bool bestImprovementOrOpt(Solucao *s, vector<vector<Subsequence>>& subseq_matrix, int tam_bloco, Data& data){
+    double bestCost = s->valorObj;
     int best_i1;
     int best_i2;
     int best_j;
-    for(int i = 1; i < s->sequencia.size() - 1;i++){
-        int vi1 = s->sequencia[i];
+    for(int i = 1; i < s->sequence.size() - 1;i++){
+        /*int vi1 = s->sequencia[i];
         int vi1_prev = s->sequencia[i-1];
         int vi2 = s->sequencia[i + tam_bloco - 1];
-        int vi2_next = s->sequencia[i + tam_bloco];
-        for(int j = i + tam_bloco; j < s->sequencia.size() - 1; j++){
-            int vj = s->sequencia[j];
-            int vj_next = s->sequencia[j+1];
-            Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix)
-            double delta = -data.getDistance(vi1_prev, vi1) - data.getDistance(vi2, vi2_next) - data.getDistance(vj, vj_next) + data.getDistance(vi1_prev, vi2_next) + data.getDistance(vj, vi2) + data.getDistance(vi1, vj_next);
-            double delta = -Matriz[vi1_prev-1][vi1-1] - Matriz[vi2-1][vi2_next-1]- Matriz[vj-1][vj_next-1] + Matriz[vi1_prev-1][vi2_next-1] + Matriz[vj-1][vi2-1] + Matriz[vi1-1][vj_next-1];
-            if (delta < bestDelta){
-                bestDelta = delta;
+        int vi2_next = s->sequencia[i + tam_bloco];*/
+        int i2 = i + tam_bloco -1;
+        for(int j = i + tam_bloco; j < s->sequence.size() - 1; j++){
+            //int vj = s->sequencia[j];
+            //int vj_next = s->sequencia[j+1];
+            Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[i2+1][j], data);
+            Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[i][i2], data);
+            Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[j+1][s->sequence.size()-1], data);
+            //double delta = -data.getDistance(vi1_prev, vi1) - data.getDistance(vi2, vi2_next) - data.getDistance(vj, vj_next) + data.getDistance(vi1_prev, vi2_next) + data.getDistance(vj, vi2) + data.getDistance(vi1, vj_next);
+            //double delta = -Matriz[vi1_prev-1][vi1-1] - Matriz[vi2-1][vi2_next-1]- Matriz[vj-1][vj_next-1] + Matriz[vi1_prev-1][vi2_next-1] + Matriz[vj-1][vi2-1] + Matriz[vi1-1][vj_next-1];
+            if (sigma_3.C < bestCost){
+                bestCost = sigma_3.C;
                 best_i1 = i;
                 best_i2 = i+tam_bloco -1;
                 best_j = j;
@@ -237,326 +233,21 @@ bool bestImprovementOrOpt(Solucao *s, vector<vector<Subsequence>>& subseq_matrix
     }
 
     int cont = 0;
-    if(bestDelta < 0){
+    if(bestCost < s->valorObj){
         do{
-        s->sequencia.insert(s->sequencia.begin() + best_j + 1, s->sequencia[best_i1]);
-        s->sequencia.erase(s->sequencia.begin() + best_i1);
+        s->sequence.insert(s->sequence.begin() + best_j + 1, s->sequence[best_i1]);
+        s->sequence.erase(s->sequence.begin() + best_i1);
         best_j--;
         cont++;
         }while(cont < tam_bloco);
-        s->valorObj = s->valorObj + bestDelta;
-        return true;
-    }
-    return false;
-}
-void BuscaLocal(Solucao *s, vector<vector<double>>& Matriz){
-    vector<int> NL = {1, 2, 3, 4, 5};
-    bool improved = false;
-
-    while (NL.empty() == false){
-        int n = rand() % NL.size();
-        switch (NL[n]){
-            case 1:
-                improved = bestImprovementSwap(s, Matriz);
-                break;
-            case 2:
-                improved = bestImprovement2Opt(s, Matriz);
-                break;
-            case 3:
-                improved = bestImprovementOrOpt(s, Matriz, 1);
-                break;
-            case 4: 
-                improved = bestImprovementOrOpt(s, Matriz, 2);
-                break;
-            case 5:
-                improved = bestImprovementOrOpt(s, Matriz, 3);
-                break;
-        }
-        if(improved){
-            NL = {1,2,3,4,5};
-        }else{
-            NL.erase(NL.begin() + n);
-        }
-    }
-}
-
-Solucao ILS(int maxIter, int maxIterIls, Data& data){
-    Solucao bestOfAll;
-    bestOfAll.valorObj = INFINITY;
-    for(int i = 0; i < maxIter;i++){
-        Solucao s = Construcao(data);
-        CalculaValorObj(data, &s);
-       /* Solucao best = s;
-        int iterIls = 0;
+        s->valorObj = bestCost;
+        UpdateAllSubseq(s, subseq_matrix, data);
         
-        while(iterIls <= maxIterIls){
-            
-            BuscaLocal(&s, Matriz);
-            if(s.valorObj < best.valorObj){
-                best = s;
-                iterIls = 0;
-            }
-            
-            s = Perturbacao(best, Matriz);
-            iterIls++;
-        }
-    
-        if(best.valorObj < bestOfAll.valorObj)
-            bestOfAll = best;*/
-    }
-    return bestOfAll;   
-}
-int main(int argc, char** argv) {
-    auto data = Data(argc, argv[1]);
-    data.read(); 
-    srand(time(NULL));
-    
-    Solucao s = Construcao(data);
-    ExibirSolucao(&s);
-    CalculaValorObj(data, &s);
-    cout << s.valorObj << endl;
-    int n = s.sequence.size();
-    vector<vector<Subsequence>> subseq_matrix(n, vector<Subsequence>(n));
-    UpdateAllSubseq(&s, subseq_matrix, data);
-    for (int k = 0; k < n; k++){
-        for (int l = 0 ; l < n; l++){
-            cout <<"i: " << k << " j: "<< l <<  " W: " << subseq_matrix[k][l].W << " T:" << subseq_matrix[k][l].T << " C: " << subseq_matrix[k][l].C << endl;
-        }
-     }
-    cout << endl;
-    bool troca = bestImprovement2Opt(&s, subseq_matrix, data);
-    //CalculaValorObj(data, &s);
-    cout << s.valorObj << endl;
-    ExibirSolucao(&s);
-
-    bool troca2 = bestImprovenmentSwap(&s, subseq_matrix, data);
-     cout << troca2 << " " << s.valorObj << endl;
-    ExibirSolucao(&s);
-
-    /*
-    bool troca2 = bestImprovementSwap(&s, subseq_matrix, data);
-    CalculaValorObj(data, &s);
-    cout << troca2 << " " << s.valorObj << endl;
-    ExibirSolucao(&s);*/
-    return 0;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-vector<int> escolher3NosAleatorios(size_t vertices){
-    vector<int> sequencia;
-    
-    sequencia.push_back(1);
-    sequencia.push_back(1);
-
-    sequencia.insert(sequencia.begin() + 1, (rand() % (vertices) + 1));
-    while(sequencia[0] == sequencia[1]){
-        sequencia.erase(sequencia.begin() + 1);
-        sequencia.insert(sequencia.begin() + 1, (rand() % (vertices) + 1));
-    }
-
-    sequencia.insert(sequencia.begin() + 2, (rand() % (vertices) + 1));
-    while(sequencia[1] == sequencia[2] || sequencia[2] == sequencia[0]){
-        sequencia.erase(sequencia.begin() + 2);
-        sequencia.insert(sequencia.begin() + 2, (rand() % (vertices) + 1));
-    }
-    
-    sequencia.insert(sequencia.begin() + 3, (rand() % (vertices) + 1));
-    while(sequencia[1] == sequencia[3] || sequencia[2] == sequencia[3] || sequencia[0] == sequencia[3]){
-        sequencia.erase(sequencia.begin() + 3);
-        sequencia.insert(sequencia.begin() + 3, (rand() % (vertices) + 1));
-    }
-    
-    
-
-    return sequencia;
-}*/
-/*
-void ExibirSolucao(Solucao *s){
-    for(int i = 0; i < s->sequencia.size() - 1;i++){
-        cout << s->sequencia[i] << "->";    
-    }
-    cout << s->sequencia.back() <<  endl;
-}
-
-}*/
-/*
-vector<InsertionInfo> calcularCustoInsercao(Solucao& s, vector<int>& CL, vector<vector<double>>& Matriz){
-    vector<InsertionInfo> custoInsercao((s.sequencia.size() - 1) * CL.size());
-    int l = 0;
-
-    for(int a = 0; a < s.sequencia.size() - 1;a++){
-        int i = s.sequencia[a];
-        int j = s.sequencia[a + 1];
-        for (auto k : CL){
-            //custoInsercao[l].custo = data.getDistance(i, k) + data.getDistance(k, j) - data.getDistance(i, j);
-            custoInsercao[l].custo = Matriz[i-1][k-1] + Matriz[k-1][j-1] - Matriz[i-1][j-1];
-            custoInsercao[l].arestaRemovida = a;
-            custoInsercao[l].noInserido = k;
-            l++;
-        }
-    }
-    return custoInsercao;
-}
-
-void inserirNaSolucao(Solucao& s, vector<InsertionInfo>& custoInsercao, vector<int>& CL, int selecionado){
-    for(int i = 0; i < s.sequencia.size();i++){
-        if(s.sequencia[i] == s.sequencia[custoInsercao[selecionado].arestaRemovida]){
-            s.sequencia.insert(s.sequencia.begin() + i + 1, custoInsercao[selecionado].noInserido);
-            break;
-        }
-    }
-    for(int i = 0; i < CL.size();i++){
-        if(CL[i] == custoInsercao[selecionado].noInserido){
-            CL.erase(CL.begin() + i);
-        }
-    }
-}*/
-/*
-bool myfunction (InsertionInfo i, InsertionInfo j) { return (i.custo<j.custo); }
-
-Solucao Construcao(int vertices, vector<vector<double>>& Matriz){
-    double tempo_ordenacao = 0;
-    Solucao s = {{}, 0.0};
-    s.sequencia = escolher3NosAleatorios(vertices);
-    vector<int> CL = nosRestantes(&s, vertices);
-    while(!CL.empty()){
-        vector<InsertionInfo> custoInsercao = calcularCustoInsercao(s, CL, Matriz);
-        sort(custoInsercao.begin(), custoInsercao.end(), myfunction);
-        double alpha = (double) rand() / RAND_MAX;
-        int selecionado = rand() % ((int) ceil((alpha + 0.000001) * custoInsercao.size()));
-        inserirNaSolucao(s, custoInsercao, CL, selecionado); 
-    }
-    return s;
-}*/
-/*
-bool bestImprovementSwap(Solucao *s, vector<vector<double>>& Matriz){
-    double bestDelta = 0;
-    int best_i,best_j;
-    for(int i = 1; i < s->sequencia.size() - 1; i++){
-        int vi = s->sequencia[i];
-        int vi_next = s->sequencia[i+1];
-        int vi_prev = s->sequencia[i-1];
-        for(int j = i+1; j < s->sequencia.size() - 1;j++){
-            int vj = s->sequencia[j];
-            int vj_next = s->sequencia[j+1];
-            int vj_prev = s->sequencia[j-1];
-            double delta = 0;
-            if(i + 1!= j){
-                delta = -data.getDistance(vi_prev,vi) - data.getDistance(vi, vi_next) + data.getDistance(vi_prev, vj) + data.getDistance(vj, vi_next) - data.getDistance(vj_prev, vj) - data.getDistance(vj, vj_next) + data.getDistance(vj_prev, vi) + data.getDistance(vi, vj_next);
-                delta = -Matriz[vi_prev-1][vi-1] - Matriz[vi-1][vi_next-1] + Matriz[vi_prev-1][vj-1] + Matriz[vj-1][vi_next-1] - Matriz[vj_prev-1][vj-1] - Matriz[vj-1][vj_next-1] + Matriz[vj_prev-1][vi-1] + Matriz[vi-1][vj_next-1];
-            } else {
-                delta = -data.getDistance(vi_prev,vi) + data.getDistance(vi_prev, vj) - data.getDistance(vj, vj_next)  + data.getDistance(vi, vj_next);
-                delta = -Matriz[vi_prev-1][vi-1] + Matriz[vi_prev-1][vj-1] - Matriz[vj-1][vj_next-1] + Matriz[vi-1][vj_next-1];
-            }
-            if(delta < bestDelta){
-                bestDelta = delta;
-                best_i = i;
-                best_j = j;
-            }
-        }
-    }
-    
-    if(bestDelta < 0){
-        swap(s->sequencia[best_i], s->sequencia[best_j]);
-        s->valorObj = s->valorObj + bestDelta;
         return true;
     }
     return false;
-}*/
-/*
-bool bestImprovement2Opt(Solucao *s, vector<vector<double>>& Matriz){
-    double bestDelta = 0;
-    int best_i;
-    int best_j;
-    for(int i = 1; i < s->sequencia.size() - 1;i++){
-        i = primeiro elemento da aresta a ser invertida
-        int vi = s->sequencia[i];
-        int vi_prev = s->sequencia[i-1];
-        for(int j = i + 3; j < s->sequencia.size() - 1; j++){
-             j = ultimo elemento da aresta a ser invertida
-            int vj = s->sequencia[j];
-            int vj_next = s->sequencia[j+1];
-            double delta = - data.getDistance(vi_prev, vi) - data.getDistance(vj, vj_next) + data.getDistance(vi_prev, vj) + data.getDistance(vi, vj_next);
-            double delta = -Matriz[vi_prev-1][vi-1] - Matriz[vj-1][vj_next-1] + Matriz[vi_prev-1][vj-1] + Matriz[vi-1][vj_next-1];
-            if(delta < bestDelta){
-                bestDelta = delta;
-                best_i = i;
-                best_j = j;
-            }
-        }
-    }
-    if(bestDelta < 0){
-        int cont = 0;
-        while((best_i + cont) < (best_j - cont)){
-            swap(s->sequencia[best_i + cont], s->sequencia[best_j - cont]);
-            cont++;
-        }
-        s->valorObj = s->valorObj + bestDelta;
-        return true;
-    }
-    return false;
-}*/
-/*
-bool bestImprovementOrOpt(Solucao *s, vector<vector<double>>& Matriz, int tam_bloco){
-    double bestDelta = 0;
-    int best_i1;
-    int best_i2;
-    int best_j;
-    for(int i = 1; i < s->sequencia.size() - 1;i++){
-        int vi1 = s->sequencia[i];
-        int vi1_prev = s->sequencia[i-1];
-        int vi2 = s->sequencia[i + tam_bloco - 1];
-        int vi2_next = s->sequencia[i + tam_bloco];
-        for(int j = i + tam_bloco; j < s->sequencia.size() - 1; j++){
-            int vj = s->sequencia[j];
-            int vj_next = s->sequencia[j+1];
-            double delta = -data.getDistance(vi1_prev, vi1) - data.getDistance(vi2, vi2_next) - data.getDistance(vj, vj_next) + data.getDistance(vi1_prev, vi2_next) + data.getDistance(vj, vi2) + data.getDistance(vi1, vj_next);
-            double delta = -Matriz[vi1_prev-1][vi1-1] - Matriz[vi2-1][vi2_next-1]- Matriz[vj-1][vj_next-1] + Matriz[vi1_prev-1][vi2_next-1] + Matriz[vj-1][vi2-1] + Matriz[vi1-1][vj_next-1];
-            if (delta < bestDelta){
-                bestDelta = delta;
-                best_i1 = i;
-                best_i2 = i+tam_bloco -1;
-                best_j = j;
-            }
-        }
-    }
-
-    int cont = 0;
-    if(bestDelta < 0){
-        do{
-        s->sequencia.insert(s->sequencia.begin() + best_j + 1, s->sequencia[best_i1]);
-        s->sequencia.erase(s->sequencia.begin() + best_i1);
-        best_j--;
-        cont++;
-        }while(cont < tam_bloco);
-        s->valorObj = s->valorObj + bestDelta;
-        return true;
-    }
-    return false;
-}*/
-/*
-void BuscaLocal(Solucao *s, vector<vector<double>>& Matriz){
+}
+void BuscaLocal(Solucao *s, vector<vector<Subsequence>>& subseq_matrix, Data& data){
     vector<int> NL = {1, 2, 3, 4, 5};
     bool improved = false;
 
@@ -564,19 +255,34 @@ void BuscaLocal(Solucao *s, vector<vector<double>>& Matriz){
         int n = rand() % NL.size();
         switch (NL[n]){
             case 1:
-                improved = bestImprovementSwap(s, Matriz);
+                improved = bestImprovementSwap(s, subseq_matrix, data);
+                /*cout << "caso swap: " << s->valorObj << " = ";
+                CalculaValorObj(data, s);
+                cout << s->valorObj << endl;*/
                 break;
             case 2:
-                improved = bestImprovement2Opt(s, Matriz);
+                improved = bestImprovement2Opt(s, subseq_matrix, data);
+                /*cout << "caso 2Opt: " << s->valorObj << " = ";
+                CalculaValorObj(data, s);
+                cout << s->valorObj << endl;*/
                 break;
             case 3:
-                improved = bestImprovementOrOpt(s, Matriz, 1);
+                improved = bestImprovementOrOpt(s, subseq_matrix, 1, data);
+                /*cout << "caso OrOpt1: " << s->valorObj << " = ";
+                CalculaValorObj(data, s);
+                cout << s->valorObj << endl;*/
                 break;
             case 4: 
-                improved = bestImprovementOrOpt(s, Matriz, 2);
+                improved = bestImprovementOrOpt(s, subseq_matrix, 2, data);
+                /*cout << "caso OrOpt2: " << s->valorObj << " = ";
+                CalculaValorObj(data, s);
+                cout << s->valorObj << endl;*/
                 break;
             case 5:
-                improved = bestImprovementOrOpt(s, Matriz, 3);
+                improved = bestImprovementOrOpt(s, subseq_matrix, 3, data);
+                /* cout << "caso OrOpt3: " << s->valorObj << " = ";
+                CalculaValorObj(data, s);
+                cout << s->valorObj << endl;*/
                 break;
         }
         if(improved){
@@ -585,12 +291,11 @@ void BuscaLocal(Solucao *s, vector<vector<double>>& Matriz){
             NL.erase(NL.begin() + n);
         }
     }
-}*/
-/*
-Solucao Perturbacao (Solucao best, vector<vector<double>>& Matriz){
+}
+Solucao Perturbacao (Solucao best, vector<vector<Subsequence>>& subseq_matrix, Data& data){
 
     Solucao s = best;
-    int vertices = best.sequencia.size() - 1;
+    int vertices = best.sequence.size() - 1;
     int i, j, tam_i, tam_j;
     //escolhe os valores aleatorios para os dois segmentos e seus tamanhos
     do{
@@ -613,79 +318,99 @@ Solucao Perturbacao (Solucao best, vector<vector<double>>& Matriz){
     
     }while(((i + tam_i) > j && (j + tam_j) > i) || ((j + tam_j) > vertices));
     
-    double delta;
+    double cost;
     if((i+ tam_i) == j || (j +tam_j) == i){
         if( i < j){
-            delta = - Matriz[s.sequencia[i]-1][s.sequencia[i-1]-1] - Matriz[s.sequencia[i+tam_i -1]-1][s.sequencia[i+tam_i]-1] -Matriz[s.sequencia[j+tam_j-1]-1][s.sequencia[j+tam_j]-1] + Matriz[s.sequencia[i-1]-1][s.sequencia[j]-1] + Matriz[s.sequencia[j+tam_j-1]-1][s.sequencia[i]-1] + Matriz[s.sequencia[i+tam_i-1]-1][s.sequencia[j+tam_j]-1];
+            Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[j][j+tam_j-1], data);
+            Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[i][i+tam_i-1], data);
+            Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[j+tam_j][s.sequence.size()-1], data);
+            cost = sigma_3.C;
         }
         else{
-            delta = -Matriz[s.sequencia[j]-1][s.sequencia[j-1]-1] - Matriz[s.sequencia[j+tam_j -1]-1][s.sequencia[j+tam_j]-1] -Matriz[s.sequencia[i+tam_i-1]-1][s.sequencia[i+tam_i]-1] + Matriz[s.sequencia[j-1]-1][s.sequencia[i]-1] + Matriz[s.sequencia[i+tam_i-1]-1][s.sequencia[j]-1] + Matriz[s.sequencia[j+tam_j-1]-1][s.sequencia[i+tam_i]-1];
+            Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][j-1], subseq_matrix[i][i+tam_i-1], data);
+            Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[j][j+tam_j-1], data);
+            Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[i+tam_i][s.sequence.size()-1], data);
+            cost = sigma_3.C;
         }
     }else{
         if(i < j){
-            delta = -Matriz[s.sequencia[i]-1][s.sequencia[i-1]-1] - Matriz[s.sequencia[i+tam_i-1]-1][s.sequencia[i+tam_i]-1] - Matriz[s.sequencia[j]-1][s.sequencia[j-1]-1] - Matriz[s.sequencia[j+tam_j]-1][s.sequencia[j+tam_j-1]-1] + Matriz[s.sequencia[i-1]-1][s.sequencia[j]-1] + Matriz[s.sequencia[j+tam_j-1]-1][s.sequencia[i+tam_i]-1] + Matriz[s.sequencia[j-1]-1][s.sequencia[i]-1] + Matriz[s.sequencia[i+tam_i-1]-1][s.sequencia[j+tam_j]-1];
+            Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[j][j + tam_j -1], data);
+            Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[i+tam_i][j-1], data);
+            Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[i][i+tam_i-1], data);
+            Subsequence sigma_4 = Subsequence :: Concatenate(sigma_3, subseq_matrix[j+tam_j][s.sequence.size()-1], data);
+            cost = sigma_4.C;
         }
         else{
-            delta = -Matriz[s.sequencia[j]-1][s.sequencia[j-1]-1] - Matriz[s.sequencia[j+tam_j-1]-1][s.sequencia[j+tam_j]-1] - Matriz[s.sequencia[i]-1][s.sequencia[i-1]-1] - Matriz[s.sequencia[i+tam_i]-1][s.sequencia[i+tam_i-1]-1] + Matriz[s.sequencia[j-1]-1][s.sequencia[i]-1] + Matriz[s.sequencia[i+tam_i-1]-1][s.sequencia[j+tam_j]-1] + Matriz[s.sequencia[i-1]-1][s.sequencia[j]-1] + Matriz[s.sequencia[j+tam_j-1]-1][s.sequencia[i+tam_i]-1];
+            Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][j-1], subseq_matrix[i][i + tam_i -1], data);
+            Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[j+tam_j][i-1], data);
+            Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[j][j+tam_j-1], data);
+            Subsequence sigma_4 = Subsequence :: Concatenate(sigma_3, subseq_matrix[i+tam_i][s.sequence.size()-1], data);
+            cost = sigma_4.C;
         }
     }
-    s.valorObj = s.valorObj + delta;
+    s.valorObj = cost;
     
     //faz a troca dos segmentos
     int cont = 0;
     if(i < j){
         do{
-            s.sequencia.insert(s.sequencia.begin() + j, s.sequencia[i]);
-            s.sequencia.erase(s.sequencia.begin() + i);
+            s.sequence.insert(s.sequence.begin() + j, s.sequence[i]);
+            s.sequence.erase(s.sequence.begin() + i);
             cont++;
         }while(cont < tam_i);
         
         cont = 0;
         do{
-            s.sequencia.insert(s.sequencia.begin() + i + cont, s.sequencia[j + cont]);
-            s.sequencia.erase(s.sequencia.begin() + j + cont + 1);
+            s.sequence.insert(s.sequence.begin() + i + cont, s.sequence[j + cont]);
+            s.sequence.erase(s.sequence.begin() + j + cont + 1);
             cont++;
         }while(cont < tam_j);
         
     }
     else{
         do{
-            s.sequencia.insert(s.sequencia.begin() + i, s.sequencia[j]);
-            s.sequencia.erase(s.sequencia.begin() + j);
+            s.sequence.insert(s.sequence.begin() + i, s.sequence[j]);
+            s.sequence.erase(s.sequence.begin() + j);
             cont++;
         }while(cont < tam_j);
         
         cont = 0;
         do{
-            s.sequencia.insert(s.sequencia.begin() + j + cont, s.sequencia[i + cont]);
-            s.sequencia.erase(s.sequencia.begin() + i + cont + 1);
+            s.sequence.insert(s.sequence.begin() + j + cont, s.sequence[i + cont]);
+            s.sequence.erase(s.sequence.begin() + i + cont + 1);
             cont++;
         }while(cont < tam_i);
     }
-    
    return s; 
 }
-*/
-/*
-Solucao ILS(int maxIter, int maxIterIls, vector<vector<double>>& Matriz){
+
+Solucao GILSRVND(int maxIter, int maxIterIls, Data& data, vector<double> R){
     Solucao bestOfAll;
     bestOfAll.valorObj = INFINITY;
-    int vertices = Matriz.size();
     for(int i = 0; i < maxIter;i++){
-        Solucao s = Construcao(vertices, Matriz);
-        CalculaValorObj(& s, Matriz);
+        int indice = rand()%26;
+        double a = R[indice];
+        Solucao s = Construcao(data, a);
+        int n = s.sequence.size();
+        vector<vector<Subsequence>> subseq_matrixs(n, vector<Subsequence>(n));
+        vector<vector<Subsequence>> subseq_matrixm(n, vector<Subsequence>(n));
+        UpdateAllSubseq(&s, subseq_matrixs, data);
+        CalculaValorObj(data, &s);
         Solucao best = s;
+        UpdateAllSubseq(&s, subseq_matrixm, data);
         int iterIls = 0;
-        
         while(iterIls <= maxIterIls){
-            
-            BuscaLocal(&s, Matriz);
+            BuscaLocal(&s, subseq_matrixs, data);
             if(s.valorObj < best.valorObj){
                 best = s;
+                UpdateAllSubseq(&best, subseq_matrixm, data);
                 iterIls = 0;
             }
-            
-            s = Perturbacao(best, Matriz);
+            s = Perturbacao(best, subseq_matrixm, data);
+            /*cout << "custo: " << s.valorObj;
+            CalculaValorObj(data, &s);
+            cout << " = " << s.valorObj << endl; */
+            UpdateAllSubseq(&best, subseq_matrixm, data);
             iterIls++;
         }
     
@@ -694,34 +419,28 @@ Solucao ILS(int maxIter, int maxIterIls, vector<vector<double>>& Matriz){
     }
     return bestOfAll;   
 }
-*/
-/*
 int main(int argc, char** argv) {
     double custo = 0;
     double tempo = 0;
     srand(time(NULL));
+    vector<double> R = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.1, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25};
+
     for(int l = 0; l < 10;l++){
         clock_t start, end;
         start = clock();
         auto data = Data(argc, argv[1]);
         data.read();
         int n = data.getDimension();
-        vector<vector<double>> Matriz(n, vector<double>(n));
-    
-        for(int i = 0; i < n; i++){
-            for(int j = 0; j < n; j++){
-                Matriz[i][j] = data.getDistance(i+1,j+1);
-            }
-        }
-   
-        int maxIter = 50;
+        int maxIter = 10;
         int maxIterIls;
-        if(n >= 150)
-            maxIterIls = n/2;
+        if(n >= 100)
+            maxIterIls = 100;
         else
             maxIterIls = n;
-        Solucao best = ILS(maxIter, maxIterIls, Matriz);
-        CalculaValorObj(& best, Matriz);
+        Solucao best = GILSRVND(maxIter, maxIterIls, data, R);
+        CalculaValorObj(data, &best);
+        //ExibirSolucao(&best);
+        cout << best.valorObj << endl;
         custo += best.valorObj;
         end = clock();
         double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
@@ -738,4 +457,24 @@ int main(int argc, char** argv) {
     return 0;
 
 }
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
