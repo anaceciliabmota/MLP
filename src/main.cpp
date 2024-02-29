@@ -4,10 +4,12 @@
 #include <time.h> 
 #include <cstdlib>
 #include <algorithm>
+#include <iomanip>
 
 using namespace std;
 
-/*Resolver o bestImprovenmentSwap que nao termina a execução.
+/*bestImprovementOrOpt(&s, subseq_matrixs, 2, data); e  bestImprovementOrOpt(&s, subseq_matrixs, 3, data) não calcula o custo corretamente.
+Consertar.
 */
 
 typedef struct Solucao {
@@ -101,12 +103,13 @@ vector<InsertionInfo> CalcularCusto (int r, vector<int>& CL, Data& data){
 bool myfunction (InsertionInfo i, InsertionInfo j) { return (i.custo<j.custo); }
 
 void inserirNaSolucao (Solucao *s, int c, int r, vector<InsertionInfo>& custoInsercao){
-    for(int i = 0; i < s->sequence.size(); i++){
+    s->sequence.insert(s->sequence.end() -1, custoInsercao[c].noInserido);
+    /*for(int i = 0; i < s->sequence.size(); i++){
         if (s->sequence[i] == r){
             s->sequence.insert(s->sequence.begin() + i + 1, custoInsercao[c].noInserido);
             break;
         }
-    }
+    }*/
 
 }
 
@@ -128,8 +131,8 @@ Solucao Construcao(Data& data, double a){
                 break;
             }
         }
-        
     }
+    CalculaValorObj(data, &s);
     return s;
 }
 bool bestImprovementSwap(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, Data& data){
@@ -165,9 +168,8 @@ bool bestImprovementSwap(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, 
     
     if(bestCost < s->valorObj){
         swap(s->sequence[best_i], s->sequence[best_j]);
-        
         s->valorObj = bestCost;
-        UpdateAllSubseq(s, subseq_matrix, data);
+        //UpdateAllSubseq(s, subseq_matrix, data);
         return true;
     }
     return false;
@@ -199,7 +201,7 @@ bool bestImprovement2Opt(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, 
             cont++;
         }
         s->valorObj = bestCost;
-        UpdateAllSubseq(s, subseq_matrix, data);
+        //UpdateAllSubseq(s, subseq_matrix, data);
         return true;
     }
     return false;
@@ -241,7 +243,7 @@ bool bestImprovementOrOpt(Solucao *s, vector<vector<Subsequence>>& subseq_matrix
         cont++;
         }while(cont < tam_bloco);
         s->valorObj = bestCost;
-        UpdateAllSubseq(s, subseq_matrix, data);
+        //UpdateAllSubseq(s, subseq_matrix, data);
         
         return true;
     }
@@ -256,30 +258,35 @@ void BuscaLocal(Solucao *s, vector<vector<Subsequence>>& subseq_matrix, Data& da
         switch (NL[n]){
             case 1:
                 improved = bestImprovementSwap(s, subseq_matrix, data);
+                if(improved){UpdateAllSubseq(s, subseq_matrix, data);}
                 /*cout << "caso swap: " << s->valorObj << " = ";
                 CalculaValorObj(data, s);
                 cout << s->valorObj << endl;*/
                 break;
             case 2:
                 improved = bestImprovement2Opt(s, subseq_matrix, data);
+                if(improved){UpdateAllSubseq(s, subseq_matrix, data);}
                 /*cout << "caso 2Opt: " << s->valorObj << " = ";
                 CalculaValorObj(data, s);
                 cout << s->valorObj << endl;*/
                 break;
             case 3:
                 improved = bestImprovementOrOpt(s, subseq_matrix, 1, data);
+                if(improved){UpdateAllSubseq(s, subseq_matrix, data);}
                 /*cout << "caso OrOpt1: " << s->valorObj << " = ";
                 CalculaValorObj(data, s);
                 cout << s->valorObj << endl;*/
                 break;
             case 4: 
                 improved = bestImprovementOrOpt(s, subseq_matrix, 2, data);
+                if(improved){UpdateAllSubseq(s, subseq_matrix, data);}
                 /*cout << "caso OrOpt2: " << s->valorObj << " = ";
                 CalculaValorObj(data, s);
                 cout << s->valorObj << endl;*/
                 break;
             case 5:
                 improved = bestImprovementOrOpt(s, subseq_matrix, 3, data);
+                if(improved){UpdateAllSubseq(s, subseq_matrix, data);}
                 /* cout << "caso OrOpt3: " << s->valorObj << " = ";
                 CalculaValorObj(data, s);
                 cout << s->valorObj << endl;*/
@@ -393,29 +400,29 @@ Solucao GILSRVND(int maxIter, int maxIterIls, Data& data, vector<double> R){
         Solucao s = Construcao(data, a);
         int n = s.sequence.size();
         vector<vector<Subsequence>> subseq_matrixs(n, vector<Subsequence>(n));
-        vector<vector<Subsequence>> subseq_matrixm(n, vector<Subsequence>(n));
+        vector<vector<Subsequence>> subseq_matrixb(n, vector<Subsequence>(n));
         UpdateAllSubseq(&s, subseq_matrixs, data);
-        CalculaValorObj(data, &s);
         Solucao best = s;
-        UpdateAllSubseq(&s, subseq_matrixm, data);
+        UpdateAllSubseq(&best, subseq_matrixb, data);
         int iterIls = 0;
         while(iterIls <= maxIterIls){
             BuscaLocal(&s, subseq_matrixs, data);
             if(s.valorObj < best.valorObj){
                 best = s;
-                UpdateAllSubseq(&best, subseq_matrixm, data);
+                UpdateAllSubseq(&best, subseq_matrixb, data);
                 iterIls = 0;
             }
-            s = Perturbacao(best, subseq_matrixm, data);
+            s = Perturbacao(best, subseq_matrixb, data);
             /*cout << "custo: " << s.valorObj;
             CalculaValorObj(data, &s);
             cout << " = " << s.valorObj << endl; */
-            UpdateAllSubseq(&best, subseq_matrixm, data);
+            UpdateAllSubseq(&s, subseq_matrixs, data);
             iterIls++;
         }
     
         if(best.valorObj < bestOfAll.valorObj)
             bestOfAll = best;
+
     }
     return bestOfAll;   
 }
@@ -424,7 +431,6 @@ int main(int argc, char** argv) {
     double tempo = 0;
     srand(time(NULL));
     vector<double> R = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.1, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25};
-
     for(int l = 0; l < 10;l++){
         clock_t start, end;
         start = clock();
@@ -440,20 +446,35 @@ int main(int argc, char** argv) {
         Solucao best = GILSRVND(maxIter, maxIterIls, data, R);
         CalculaValorObj(data, &best);
         //ExibirSolucao(&best);
-        cout << best.valorObj << endl;
         custo += best.valorObj;
         end = clock();
         double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
         tempo += time_taken;
+        cout << "Execucao " << l+1 << " - custo: " << fixed << setprecision(2) << best.valorObj << endl;
     }
-    
     double custo_medio = custo/10;
     double tempo_medio = tempo/10;
-    cout << "custo: " << custo_medio << endl;
+    cout << "custo: " << fixed << setprecision(2) << custo_medio << endl;
     cout << "media de tempo gasto: " << fixed << tempo_medio;
     cout << " secs" << endl;
-    
-    
+   //codigo para teste para descobrir onde está o erro do meu código
+    /*auto data = Data(argc, argv[1]);
+    data.read();
+    int indice = rand()%26;
+    double a = R[indice];
+    Solucao s = Construcao(data, a);
+    int n = s.sequence.size();
+    vector<vector<Subsequence>> subseq_matrixs(n, vector<Subsequence>(n));
+    UpdateAllSubseq(&s, subseq_matrixs, data);
+    for(int l = 0; l < 100; l++){
+        cout << "antes:" << fixed << setprecision(2) << s.valorObj<< endl;
+        bool improved = bestImprovementOrOpt(&s, subseq_matrixs, 3, data);
+        if(improved){UpdateAllSubseq(&s, subseq_matrixs, data);}
+        cout << "depois: "<< fixed << setprecision(2) << s.valorObj << " ";
+        CalculaValorObj(data, &s);
+        cout << fixed << setprecision(2) << s.valorObj<< endl;
+    }
+    */
     return 0;
 
 }

@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [ {
+        "name": "Debug My Program with Input File",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/mlp.exe", // Substitua pelo caminho do seu executável
+        "args": ["C:\\Users\\anace\\OneDrive\\Documentos\\log\\MLP\\instances\\pr76.tsp"], // Substitua pelo caminho do arquivo de entrada
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [],
+        "externalConsole": true,
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            }
+        ],
+        "preLaunchTask": "", // Opcional: Nome da sua tarefa de build, se necessário
+        "miDebuggerPath": "C:\\Program Files\\CodeBlocks\\MinGW\\bin\\gdb.exe" // Ajuste para o caminho do seu debugger, se necessário
+    }
+]
+}

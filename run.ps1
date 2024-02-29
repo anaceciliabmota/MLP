@@ -6,7 +6,7 @@ foreach($f in $files){
     
     "$f" >> $OUTPUT
     "$f"
-& ".\tsp.exe"  ".\instances\$f">> $OUTPUT
+& ".\mlp.exe"  ".\instances\$f">> $OUTPUT
 "" >> $OUTPUT
 
 }
