@@ -7,7 +7,7 @@
         "name": "Debug My Program with Input File",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/mlp.exe", // Substitua pelo caminho do seu executável
+        "program": "${workspaceFolder}/src/mlp.exe", // Substitua pelo caminho do seu executável
         "args": ["C:\\Users\\anace\\OneDrive\\Documentos\\log\\MLP\\instances\\pr76.tsp"], // Substitua pelo caminho do arquivo de entrada
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",

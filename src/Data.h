@@ -1,4 +1,4 @@
-#ifndef DATA_H
+E#ifndef DATA_H
 #define DATA_H
 
 #define INFINITE 0
