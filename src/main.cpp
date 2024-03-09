@@ -168,7 +168,7 @@ bool bestImprovement2Opt(Solucao *s,vector<vector<Subsequence>>& subseq_matrix, 
     int best_j;
     for(int i = 1; i < s->sequence.size() - 1;i++){
        //i = primeiro elemento da aresta a ser invertida
-        for(int j = i + 3; j < s->sequence.size() - 1; j++){
+        for(int j = i + 2; j < s->sequence.size() - 1; j++){
             // j = ultimo elemento da aresta a ser invertida
             Subsequence sigma_1;
             sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[j][i], data);
@@ -197,7 +197,7 @@ bool bestImprovementOrOpt(Solucao *s, vector<vector<Subsequence>>& subseq_matrix
     int best_i1;
     int best_i2;
     int best_j;
-    for(int i = 1; i < s->sequence.size()- tam_bloco -2;i++){
+    for(int i = 1; i < s->sequence.size()- tam_bloco;i++){
         int i2 = i + tam_bloco -1;
         for(int j = 0; j < s->sequence.size() - 1; j++){
             if(i > j || i2 < j){
