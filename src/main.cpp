@@ -197,39 +197,56 @@ bool bestImprovementOrOpt(Solucao *s, vector<vector<Subsequence>>& subseq_matrix
     int best_i1;
     int best_i2;
     int best_j;
-    for(int i = 1; i < s->sequence.size() - 1;i++){
-        /*int vi1 = s->sequencia[i];
-        int vi1_prev = s->sequencia[i-1];
-        int vi2 = s->sequencia[i + tam_bloco - 1];
-        int vi2_next = s->sequencia[i + tam_bloco];*/
+    for(int i = 1; i < s->sequence.size()- tam_bloco -2;i++){
         int i2 = i + tam_bloco -1;
-        for(int j = i + tam_bloco; j < s->sequence.size() - 1; j++){
-            //int vj = s->sequencia[j];
-            //int vj_next = s->sequencia[j+1];
-            Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[i2+1][j], data);
-            Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[i2][i], data);
-            Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[j+1][s->sequence.size()-1], data);
-            //double delta = -data.getDistance(vi1_prev, vi1) - data.getDistance(vi2, vi2_next) - data.getDistance(vj, vj_next) + data.getDistance(vi1_prev, vi2_next) + data.getDistance(vj, vi2) + data.getDistance(vi1, vj_next);
-            //double delta = -Matriz[vi1_prev-1][vi1-1] - Matriz[vi2-1][vi2_next-1]- Matriz[vj-1][vj_next-1] + Matriz[vi1_prev-1][vi2_next-1] + Matriz[vj-1][vi2-1] + Matriz[vi1-1][vj_next-1];
-            if (sigma_3.C < bestCost){
-                bestCost = sigma_3.C;
-                best_i1 = i;
-                best_i2 = i+tam_bloco -1;
-                best_j = j;
+        for(int j = 0; j < s->sequence.size() - 1; j++){
+            if(i > j || i2 < j){
+                if(i2 < j){
+                    Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][i-1], subseq_matrix[i2+1][j], data);
+                    Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[i2][i], data);
+                    Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[j+1][s->sequence.size()-1], data);
+                    if (sigma_3.C < bestCost){
+                        bestCost = sigma_3.C;
+                        best_i1 = i;
+                        best_i2 = i+tam_bloco -1;
+                        best_j = j; 
+                    }
+                }
+                else if(i > j){
+                    Subsequence sigma_1 = Subsequence :: Concatenate(subseq_matrix[0][j], subseq_matrix[i2][i], data);
+                    Subsequence sigma_2 = Subsequence :: Concatenate(sigma_1, subseq_matrix[j+1][i-1], data);
+                    Subsequence sigma_3 = Subsequence :: Concatenate(sigma_2, subseq_matrix[i2+1][s->sequence.size()-1],data);
+                    if (sigma_3.C < bestCost){
+                        bestCost = sigma_3.C;
+                        best_i1 = i;
+                        best_i2 = i+tam_bloco -1;
+                        best_j = j;    
+                    }
+                }
             }
         }
     }
-
     int cont = 0;
     if(bestCost < s->valorObj){
-        do{
-        s->sequence.insert(s->sequence.begin() + best_j + 1, s->sequence[best_i1]);
-        s->sequence.erase(s->sequence.begin() + best_i1);
-        best_j--;
-        cont++;
-        }while(cont < tam_bloco);
-        s->valorObj = bestCost;
-        return true;
+        if(best_j > best_i2){
+            do{
+            s->sequence.insert(s->sequence.begin() + best_j + 1, s->sequence[best_i1]);
+            s->sequence.erase(s->sequence.begin() + best_i1);
+            best_j--;
+            cont++;
+            }while(cont < tam_bloco);
+            s->valorObj = bestCost;
+            return true;
+        } else{
+            do{
+            s->sequence.insert(s->sequence.begin() + best_j + 1, s->sequence[best_i1+cont]);
+            s->sequence.erase(s->sequence.begin() + best_i1 + 1 + cont);
+            cont++;
+            }while(cont < tam_bloco);
+            s->valorObj = bestCost;
+            return true;
+        }
+       
     }
     return false;
 }
@@ -446,16 +463,12 @@ int main(int argc, char** argv) {
     int n = s.sequence.size();
     vector<vector<Subsequence>> subseq_matrix(n, vector<Subsequence>(n));
     UpdateAllSubseq(&s, subseq_matrix, data);
-    cout << "perturbacao: " << endl;
-    for(int l = 0; l < 20; l++){
-        cout << "antes:" << fixed << setprecision(2) << s.valorObj<< endl;
-        s = Perturbacao(s, subseq_matrix, data);
-        UpdateAllSubseq(&s, subseq_matrix, data);
-        cout << "depois: "<< fixed << setprecision(2) << s.valorObj << " ";
-        CalculaValorObj(data, &s);
-        cout << fixed << setprecision(2) << s.valorObj<< endl;
-    }*/
-     return 0;
+    cout <<"valor anterior: " << s.valorObj << endl;
+    ExibirSolucao(&s);
+    bool improve = bestImprovementOrOpt(&s, subseq_matrix, 1, data);
+    ExibirSolucao(&s);
+    cout << improve << " depois: " << s.valorObj; */
+    return 0;
 }
 
 
